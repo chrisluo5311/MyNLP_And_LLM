@@ -1,6 +1,9 @@
 import csv
 import numpy
+import re
 import numpy as np
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 def import_csv(file_path, is_label=False):
@@ -8,13 +11,25 @@ def import_csv(file_path, is_label=False):
     with open(file_path, 'r') as f:
         reader = csv.reader(f)
         next(reader)
+        stemmer = PorterStemmer()
         for each_line in reader:
             if len(each_line) > 0:
                 if is_label:
                     label = int(each_line[0].strip())
                     document.append(label)
                 else:
+                    # text = each_line[0].strip() + " "
                     text = each_line[1].strip()
+                    text = text.lower()
+                    text = re.sub(r"@\w+", '', text) # remove @
+                    text = re.sub(r"#\w+", '', text) # remove #
+                    text = re.sub(r'\d+', '', text) # remove numbers
+                    text = re.sub(r'[^a-zA-Z0-9\s]', " ", text) # remove special characters
+                    text = re.sub(r'\s+', " ", text).strip() # remove extra spaces
+
+                    tokens = word_tokenize(text)
+                    after_stem = [stemmer.stem(each_word) for each_word in tokens]
+                    text = " ".join(after_stem)
                     document.append(text)
     return document
 
@@ -82,11 +97,11 @@ def fit_gd(X_train, y_train, eta=0.01, n_iters=20000, epsilon=1e-6):
         weight += eta * gradient
 
         cur_loss = monitor_loss(y_train, y_pred)
-        if cur_iter % 1000 == 0 and cur_iter > 0:
+        if cur_iter % 3000 == 0 and cur_iter > 0:
             data_likelihood = monitor_data_likelihood(y_train, y_pred)
             print(f"Iteration:{cur_iter} Loss: {cur_loss:.4f} Data Likelihood: {data_likelihood:.4f}")
             # eta /= 2
-            # print(f"Current eta: {eta:.6f}")
+            # print(f"New eta: {eta:.6f}")
         if abs(prev_loss - cur_loss) < epsilon:
             print(f"Break at iteration {cur_iter} Current Loss: {cur_loss:.6f} Previous Loss: {prev_loss:.6f}")
             break
@@ -118,7 +133,7 @@ def fit_stochastic_gd(X_train, y_train, eta=0.1, n_iters=30000, epsilon=1e-5, ba
 
         full_pred = sigmoid(X_train.dot(weight))
         cur_loss = monitor_loss(y_train, full_pred)
-        if epoch % 1000 == 0 and epoch > 0:
+        if epoch % 2000 == 0 and epoch > 0:
             print(f"Epoch:{epoch} Loss: {cur_loss:.6f}")
             eta /= 2
             print(f"Current eta: {eta:.6f}")
@@ -183,6 +198,7 @@ def write_weight(weight, file_path, file_name, MSE_VAL, max_feature_cnt):
 
 def output_test_file(x_test_document, ultra_weight, file_path, vectorizer):
     X_test = convert_data_to_tfidf(x_test_document, vectorizer, True)
+    print(f"Test data shape: {X_test.shape}")
     s_val = sigmoid(X_test.dot(ultra_weight))
     np.savetxt(file_path, s_val, fmt='%.6f')
 
@@ -219,9 +235,11 @@ if __name__ == '__main__':
     # print("Best Feature Count: ", best_ft_cnt)
     # print("Best Accuracy: ", best_accuracy)
 
-    # 0.9045833333333333
-    ft_cnt = 4200
-    vectorizer = TfidfVectorizer(max_features=ft_cnt)
+    # with ngram_range=(1,2), max_feature: 8000, sublinear_tf= False or True => accuracy: 0.91125
+    # with ngram_range=(1,2), max_feature: 1000, sublinear_tf= False or True => accuracy: 0.9145833333333333
+    ft_cnt = 1000
+    # ft_cnt = None # 0.90375
+    vectorizer = TfidfVectorizer(max_features=ft_cnt, ngram_range=(1,2), sublinear_tf=True)
     X_train = convert_data_to_tfidf(x_document, vectorizer)
     y_train = numpy.array(y_label).reshape(-1, 1)
 
@@ -229,9 +247,9 @@ if __name__ == '__main__':
     best_mse, best_weight = inner_split_train_test(X_train, y_train, ft_cnt)
     train_pred = predict(X_train, best_weight)
     print("Training Accuracy:", accuracy(train_pred, y_train))
-    # write_weight(best_weight, "./weight_history", "ultra_best_weight", best_mse, ft_cnt)
+    # write_weight(best_weight, "./weight_history", "final_ultra_best_weight", best_mse, ft_cnt)
 
     # Final: output the test result
-    # best_weight = np.array(import_weight_csv("./weight_history/ultra_best_weight_0.4771_4200.csv")).astype(float)
-    file_path_for_test = "./predict_test/yprob_test.txt"
-    output_test_file(x_test_doc, best_weight, file_path_for_test, vectorizer)
+    # best_weight = np.array(import_weight_csv("./weight_history/final_ultra_best_weight_0.4083_1000.csv.csv")).astype(float)
+    # file_path_for_test = "predict_test/yprob_test.txt"
+    # output_test_file(x_test_doc, best_weight, file_path_for_test, vectorizer)

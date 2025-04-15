@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # b = np.array([0,-1,2])
     # print(euclidean_distance(a, b))
 
-    yprob_test = np.loadtxt('../predict_test/yprob_test.txt')
+    yprob_test = np.loadtxt('../predict_test/yprob_test_old.txt')
     print(yprob_test)
     print(yprob_test.shape)
     print(type(yprob_test))
