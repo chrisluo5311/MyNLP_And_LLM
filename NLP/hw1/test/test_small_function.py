@@ -1,5 +1,4 @@
 import numpy as np
-from textblob import TextBlob
 from symspellpy import SymSpell, Verbosity
 
 def euclidean_distance(a, b):
