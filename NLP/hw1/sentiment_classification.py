@@ -6,7 +6,9 @@ from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from symspellpy import SymSpell, Verbosity
+import nltk
 
+nltk.download('punkt_tab')
 # init SymSpell
 symSpell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 symSpell.load_dictionary("./frequency_dictionary_en_82_765.txt", term_index=0, count_index=1)
@@ -82,24 +84,20 @@ def convert_data_to_tfidf(doc, vectorizer, is_test=False):
 def sigmoid(r):
     return 1 / (1 + np.exp(-r))
 
-def euclidean_distance(a, b):
-    return np.linalg.norm(a-b)
-
 def monitor_loss(y_train, y_predict):
     epsilon = 1e-15
-    if np.any(np.isnan(y_predict)):
-        print("y_predict contains NaN values❗️")
     y_predict = np.clip(y_predict, epsilon, 1-epsilon)
     loss = -np.mean(y_train * np.log(y_predict) + (1 - y_train) * np.log(1 - y_predict))
     return loss
 
 def monitor_data_likelihood(y_train, y_predict):
+    epsilon = 1e-15
+    y_predict = np.clip(y_predict, epsilon, 1-epsilon)
     return np.mean(y_train * np.log(y_predict) + (1 - y_train) * np.log(1 - y_predict))
 
 # gradient ascent but monitor cross entropy loss & data likelihood during training
-def fit_gd(X_train, y_train, eta=0.01, n_iters=20000, epsilon=1e-6):
+def fit_gd(X_train, y_train, eta=0.01, n_iters=30000, epsilon=1e-6):
     print("Start fitting...")
-    # weight = np.random.randn(X_train.shape[1], 1) * 0.01
     weight = np.zeros((X_train.shape[1], 1))
     cur_iter = 1
     prev_loss = float('inf')
@@ -109,56 +107,17 @@ def fit_gd(X_train, y_train, eta=0.01, n_iters=20000, epsilon=1e-6):
         weight += eta * gradient
 
         cur_loss = monitor_loss(y_train, y_pred)
-        if cur_iter % 3000 == 0 and cur_iter > 0:
+        if cur_iter % 10000 == 0 and cur_iter > 0:
             data_likelihood = monitor_data_likelihood(y_train, y_pred)
             print(f"Iteration:{cur_iter} Loss: {cur_loss:.4f} Data Likelihood: {data_likelihood:.4f}")
-            # eta /= 2
-            # print(f"New eta: {eta:.6f}")
+            eta = eta * 0.9
+            print(f"New eta: {eta:.6f}")
         if abs(prev_loss - cur_loss) < epsilon:
             print(f"Early Break at iteration {cur_iter} Current Loss: {cur_loss:.6f} Previous Loss: {prev_loss:.6f}")
             break
         if cur_loss < prev_loss:
             prev_loss = cur_loss
         cur_iter += 1
-    return weight
-
-# Not using ❗️
-def fit_stochastic_gd(X_train, y_train, eta=0.1, n_iters=30000, epsilon=1e-5, batch_size=32):
-    tolearance = 10
-    weight = np.random.randn(X_train.shape[1], 1) * 0.01
-    # weight = np.zeros((X_train.shape[1], 1))
-    total_X_len = X_train.shape[0]
-    prev_loss = float('inf')
-
-    for epoch in range(n_iters):
-        indices = np.random.permutation(total_X_len)
-        X_shuffled = X_train[indices]
-        y_shuffled = y_train[indices]
-
-        # predict for every batch
-        for start in range(0, total_X_len, batch_size):
-            end = start + batch_size
-            X_batch = X_shuffled[start:end]
-            y_batch = y_shuffled[start:end]
-
-            y_pred = sigmoid(X_batch.dot(weight))
-            gradient = X_batch.T.dot((y_batch - y_pred))
-            weight += eta * gradient / batch_size
-
-        full_pred = sigmoid(X_train.dot(weight))
-        cur_loss = monitor_loss(y_train, full_pred)
-        if epoch % 2000 == 0 and epoch > 0:
-            print(f"Epoch:{epoch} Loss: {cur_loss:.6f}")
-            eta /= 2
-            print(f"Current eta: {eta:.6f}")
-        if abs(prev_loss - cur_loss) < epsilon:
-            if tolearance == 0:
-                print(f"Break at epoch {epoch} Current Loss: {cur_loss:.6f} Previous Loss: {prev_loss:.6f}")
-                break
-            tolearance -= 1
-        if cur_loss < prev_loss:
-            prev_loss = cur_loss
-
     return weight
 
 def predict(X_test, weight, threshold=0.5):
@@ -174,7 +133,7 @@ def accuracy(y_predict, y_test):
     total = len(y_test)
     return correct / total
 
-def inner_split_train_test(X_train, y_train, max_feature_cnt, split_ratio=0.8, total_round=1):
+def fit_and_transform(X_train, y_train, max_feature_cnt, split_ratio=0.8, total_round=1):
     # split the data
     to_split_index = int(len(X_train) * split_ratio)
     X_train_split = X_train[:to_split_index]
@@ -185,23 +144,21 @@ def inner_split_train_test(X_train, y_train, max_feature_cnt, split_ratio=0.8, t
     y_test_split = y_train[to_split_index:]
     y_test_split = y_test_split.reshape(-1, 1)
 
-    best_weight = np.zeros((X_train.shape[1], 1))
-    best_mse = float('inf')
-    best_accuracy = float('-inf')
+    round_best_weight = np.zeros((X_train.shape[1], 1))
+    round_best_mse = float('inf')
     for i in range(total_round):
-        print(f"Round {i}")
+        # print(f"Round {i}")
         train_weight = fit_gd(X_train_split, y_train_split)
-        # train_weight = fit_stochastic_gd(X_train_split, y_train_split)
         y_predict = predict(X_test_split, train_weight)
         mse = MSE(y_predict, y_test_split)
-        print("MSE: ", mse)
-        if mse < best_mse:
-            best_mse = mse
-            best_weight = train_weight
+        # print("MSE: ", mse)
+        if mse < round_best_mse:
+            round_best_mse = mse
+            round_best_weight = train_weight
 
-    print("Best MSE: ", best_mse)
-    # write_weight(best_weight, "./weight_history", "best_weight", best_mse, max_feature_cnt)
-    return best_mse, best_weight
+    # print("Best MSE: ", round_best_mse)
+    # write_weight(round_best_weight, "./weight_history", "round_best_weight", round_best_mse, max_feature_cnt)
+    return round_best_mse, round_best_weight
 
 def write_weight(weight, file_path, file_name, MSE_VAL, max_feature_cnt):
     file_path = f"{file_path}/{file_name}_{MSE_VAL:.4f}_{max_feature_cnt}.csv"
@@ -227,11 +184,10 @@ if __name__ == '__main__':
 
     x_test_doc = import_csv(x_test_path) # len: 600
 
-    # with ngram_range=(1,2), max_feature: 8000, sublinear_tf= False or True => accuracy: 0.91125
-    # with ngram_range=(1,2), max_feature: 1000, sublinear_tf= False or True => accuracy: 0.9145833333333333
+
     # with ngram_range=(1,2), max_feature: 1000, sublinear_tf= False or True => accuracy: 0.91875
-    # with ngram_range=(1,2), max_feature: 1100, sublinear_tf= False or True => accuracy: 0.9191666666666667
-    # with ngram_range=(1,2), max_feature: 1200, sublinear_tf= False or True => accuracy: 0.9229166666666667
+    # with ngram_range=(1,2), max_feature: 1100, sublinear_tf= True => accuracy: 0.9191666666666667
+    # with ngram_range=(1,2), max_feature: 1200, sublinear_tf= True => accuracy: 0.9229166666666667
     # ft_cnt = None # 0.90375
     ft_cnt = 1200
     # best_training_accuracy = 0.9229166666666667
@@ -243,20 +199,22 @@ if __name__ == '__main__':
     y_train = numpy.array(y_label).reshape(-1, 1)
 
     # first inner test by splitting the data
-    best_mse, best_weight = inner_split_train_test(X_train, y_train, ft_cnt)
+    best_mse, best_weight = fit_and_transform(X_train, y_train, ft_cnt)
     train_pred = predict(X_train, best_weight)
     cur_accuracy = accuracy(train_pred, y_train)
     print(f"Training Accuracy: {cur_accuracy}")
+    print(f"============= Mock training over =============")
         # if cur_accuracy > best_training_accuracy:
         #     best_training_accuracy = cur_accuracy
         #     best_max_ft = i
     # print(f"Best Training Accuracy: {best_training_accuracy}")
     # print(f"Best max_features: {best_max_ft}")
 
-    # 🗂️ write weight to file
+    # write weight to file
     # write_weight(best_weight, "./weight_history", "finalV2_ultra_best_weight", best_mse, ft_cnt)
 
     # 🗂️ write test file "yprob_test.txt"
-    # best_weight = np.array(import_weight_csv("./weight_history/.csv")).astype(float)
+    # print("Start training all X_train & y_train ...")
+    # total_train_weight = fit_gd(X_train, y_train)
     # file_path_for_test = "predict_test/yprob_test.txt"
-    # output_test_file(x_test_doc, best_weight, file_path_for_test, vectorizer)
+    # output_test_file(x_test_doc, total_train_weight, file_path_for_test, vectorizer)

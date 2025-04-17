@@ -32,7 +32,11 @@ if __name__ == '__main__':
     # print(euclidean_distance(a, b))
 
     yprob_test = np.loadtxt('../predict_test/yprob_test.txt')
-    print(yprob_test)
+    if np.any(yprob_test > 1) or np.any(yprob_test < 0):
+        print("yprob_test is out of range❗️")
+    else:
+        print("yprob_test is All in range👌")
+    # print(yprob_test)
     print(yprob_test.shape)
     print(type(yprob_test))
 
