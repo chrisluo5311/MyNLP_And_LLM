@@ -13,6 +13,21 @@ function getMonthlyData() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    // input with id "username" on change
+    const usernameInput = document.getElementById("username");
+    usernameInput.addEventListener("input", function () { 
+        const username = usernameInput.value;
+        // regex to check if username has at least one capital letter, one special character, and one number, and is at least 8 characters long
+        const regex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (regex.test(username)) {
+            usernameInput.style.borderColor = "green";
+            usernameInput.style.backgroundColor = "#d4edda"; // light green
+        } else {
+            usernameInput.style.borderColor = "red";
+            usernameInput.style.backgroundColor = "#f8d7da"; // light red
+        }
+    });
+
     const ctx = document.getElementById('barChart').getContext('2d');
 
     // Initialize the bar chart
