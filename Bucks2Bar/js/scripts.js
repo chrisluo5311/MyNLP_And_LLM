@@ -82,5 +82,51 @@ document.addEventListener("DOMContentLoaded", () => {
         link.download = 'chart.png';
         link.click();
     });
-});
 
+    document.getElementById('send-email').addEventListener('click', async () => {
+        const emailInput = document.getElementById('email-address');
+        const userEmail = emailInput.value;
+        const chartCanvas = document.getElementById('barChart');
+
+        // Validate email
+        const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!isValidEmail(userEmail)) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        // Check if the chart exists
+        const chartInstance = Chart.getChart(chartCanvas); // Get the Chart.js instance
+        if (!chartInstance) {
+            alert('Chart not found. Please generate the chart first.');
+            return;
+        }
+
+        // Generate the chart image as a base64 string
+        const chartImage = chartInstance.toBase64Image();
+
+        // Send the email and chart image to the backend
+        try {
+            const response = await fetch('http://localhost:3000/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    image: chartImage,
+                }),
+            });
+
+            if (response.ok) {
+                alert('Email sent successfully!');
+                emailInput.value = ''; // Clear the email input field
+            } else {
+                alert('Failed to send email. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while sending the email.');
+        }
+    });
+});
