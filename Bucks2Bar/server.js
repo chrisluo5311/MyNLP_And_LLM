@@ -10,12 +10,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// console log the environment variables
-// console.log('Environment Variables:', {
-//     RESEND_SMTP_USER: process.env.RESEND_SMTP_USER,
-//     RESEND_SMTP_PASS: process.env.RESEND_SMTP_PASS,
-// });
-
 // Configure your SMTP server
 const transporter = nodemailer.createTransport({
     host: 'smtp.resend.com', // Resend SMTP server
@@ -29,8 +23,6 @@ const transporter = nodemailer.createTransport({
 app.post('/send-email', async (req, res) => {
     console.log('Send Email works!');
     const { email, image } = req.body;
-    // console.log('1.', {email});
-    // console.log('2.', {image});
 
     try {
         await transporter.sendMail({
