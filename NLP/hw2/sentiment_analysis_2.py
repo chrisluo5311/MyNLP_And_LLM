@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import re
 import os
@@ -49,7 +50,8 @@ def transform(sentence, word2vec, dim=50):
         if len(each_word_embedded_vector) == 0:
             sentence_vector = torch.zeros(dim)
         else:
-            sentence_vector = torch.mean(torch.stack(each_word_embedded_vector), dim=0)
+            sentence_vector = torch.tensor(np.array([vec for vec in each_word_embedded_vector])).mean(dim=0)
+            # sentence_vector = torch.mean(torch.stack(each_word_embedded_vector), dim=0)
             # could use torch.max to capture the strongest signal and concat with torch.mean
             # sentence_vector = torch.max(torch.stack(each_word_embedded_vector), dim=0)
         all_line_vectors.append(sentence_vector)
@@ -90,7 +92,7 @@ class SentimentDataSet:
         print(x_doc_clean)
         x_train = self.transform(x_doc_clean, self.load_glove_as_dict())
         print("x_train shape = ", x_train.shape)
-        # print("x_train = ", x_train)
+        print("x_train = ", x_train)
 
     def correct_mispronounciation(self, word):
         # Verbosity.CLOSEST: A parameter specifying that the method should return the closest match
@@ -134,9 +136,6 @@ class SentimentDataSet:
         after_lemma = [self.lemmatizer.lemmatize(each_word, self.tag_wordnet_pos(each_tag)) for each_word, each_tag in tagged_tokens]
         cleaner_text = " ".join(after_lemma)
         return cleaner_text
-
-
-
 
 if __name__ == '__main__':
     x_train_path = "../train_data/x_train.csv"
