@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import sklearn.neighbors
-
 from collections import OrderedDict
+
 
 word_embeddings = pd.read_csv('./glove.6B.50d.txt.zip',
                             header=None, sep=' ', index_col=0,
