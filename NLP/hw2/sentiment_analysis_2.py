@@ -7,16 +7,23 @@ from collections import OrderedDict
 from nltk import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk import pos_tag, word_tokenize
+from nltk.tokenize import TweetTokenizer
 from nltk.corpus import wordnet
+from nltk.corpus import stopwords
 from symspellpy import SymSpell, Verbosity
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import  KFold
+import matplotlib.pyplot as plt
+from matplotlib import cm
+import spacy
+from spacy.matcher import PhraseMatcher
 import nltk
 
 # nltk.download('punkt_tab')
 # nltk.download('wordnet')
 # nltk.download('averaged_perceptron_tagger_eng')
+# nltk.download('stopwords')
 
 # init SymSpell
 symSpell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
@@ -29,6 +36,8 @@ symSpell.load_dictionary("./glove_symspell_dictionary.txt", term_index=0, count_
 glove_file_path = "./glove.6B.50d.txt"
 # glove as dictionary path
 glove_symspell_file_path = "./glove_symspell_dictionary.txt"
+
+
 
 # transform glove to dictionary for misspelling correction
 def transform_glove_to_dictionary():
@@ -53,8 +62,8 @@ def transform(sentence, word2vec, dim=50):
         if len(each_word_embedded_vector) == 0:
             each_sentence_tensor = torch.zeros(dim)
         else:
-            tmp_np_arr = np.array([vec for vec in each_word_embedded_vector])
-            each_sentence_tensor = torch.tensor(tmp_np_arr).mean(dim=0)
+            tmp_word_arr = np.array([vec for vec in each_word_embedded_vector])
+            each_sentence_tensor = torch.tensor(tmp_word_arr).mean(dim=0) # this is the semantic meaning of a sentence
             # print(f"👀Sentence vector:\n{each_sentence_tensor}")
             # each_sentence_tensor = torch.mean(torch.stack(each_word_embedded_vector), dim=0)
             # could use torch.max to capture the strongest signal and concat with torch.mean
@@ -73,7 +82,21 @@ class SentimentDataSet:
         self.y_col = label_column
         self.stemmer = PorterStemmer()
         self.lemmatizer = WordNetLemmatizer()
+        self.tweet_tokenizer = TweetTokenizer()
+        # custom stop words
+        new_stopwords = ["oh", "yeah", "ok", "okay", "like", "so", "just", "well", "but", "and"]
+        self.stop_words = set(stopwords.words('english')).union(new_stopwords)
         self.transform = transform
+        self.negation_words ={
+            "isn't", "wasn't", "aren't", "weren't", "don't", "doesn't", "didn't",
+            "can't", "couldn't", "won't", "wouldn't", "shouldn't", "mustn't",
+            "mightn't", "shan't", "n't", 'not', 'no', 'never', 'none'
+        }
+        self.nlp = spacy.load("en_core_web_sm")
+        self.matcher = PhraseMatcher(self.nlp.vocab)
+        self.phrases = ["down the drain", "out of hand", "under the weather", "out of order"]
+        patterns = [self.nlp.make_doc(phrase) for phrase in self.phrases]
+        self.matcher.add("IMPORTANT_PHRASES", patterns)
 
     def load_glove_as_dict(self):
         print("Loading glove as dictionary...")
@@ -101,7 +124,7 @@ class SentimentDataSet:
         print("X_train = ", X_train)
         print("y_train shape = ", y_train.shape)
         print("y_train = ", y_train)
-        return X_train, y_train
+        return X_train, y_train, x_doc_clean
 
     def correct_mispronounciation(self, word):
         # Verbosity.CLOSEST: A parameter specifying that the method should return the closest match
@@ -123,21 +146,47 @@ class SentimentDataSet:
         else:
             return wordnet.NOUN
 
+    def contraction_filter(self, tokens):
+        filtered_tokens = []
+        for token in tokens:
+            if token in self.negation_words:
+                filtered_tokens.append(token)
+            elif "'" in token and token not in self.negation_words:
+                continue
+            else:
+                filtered_tokens.append(token)
+        return filtered_tokens
+
+    # e.g., "down the drain" => "down_the_drain"
+    def preserve_phrases(self, text):
+        doc = self.nlp(text)
+        matches = self.matcher(doc)
+        preserved_text = text
+        for match_id, start, end in matches:
+            span = doc[start:end]
+            # Replace with "down_the_drain"
+            preserved_text = preserved_text.replace(span.text, "_".join(span.text.split()))
+        return preserved_text
+
     def clean_text(self, text):
         text = text.strip()
         text = text.lower()
         text = re.sub(r"@\w+", '', text)  # remove @
         text = re.sub(r"#\w+", '', text)  # remove #
         text = re.sub(r'\d+', '', text)  # remove numbers
-        text = re.sub(r'[^a-zA-Z0-9\s]', " ", text)  # remove special characters
+        text = re.sub(r"[^a-zA-Z0-9\s']", " ", text)  # remove special characters
         text = re.sub(r'\s+', " ", text).strip()  # remove extra spaces
-        tokens = word_tokenize(text)
+        text = self.preserve_phrases(text)
+        tokens = self.tweet_tokenizer.tokenize(text)
+        tokens = self.contraction_filter(tokens)
         # correct mispronounciation
         corrected_tokens = [self.correct_mispronounciation(token) for token in tokens]
+        # remove stop words
+        no_stop_words_tokens = [token for token in corrected_tokens if token not in self.stop_words or token in self.negation_words]
         # word stemming
         # after_stem = [self.stemmer.stem(each_word) for each_word in corrected_tokens]
         # POS tagging
-        tagged_tokens = pos_tag(corrected_tokens)
+        tagged_tokens = pos_tag(no_stop_words_tokens)
         # word Lemmatization
         after_lemma = [self.lemmatizer.lemmatize(each_word, self.tag_wordnet_pos(each_tag)) for each_word, each_tag in tagged_tokens]
         cleaner_text = " ".join(after_lemma)
@@ -152,8 +201,9 @@ class LogisticRegressionModel(nn.Module):
         y_pred = torch.sigmoid(self.linear(x))
         return y_pred
 
-def CustomNeuralNetwork():
+class CustomNeuralNetwork(nn.Module):
     def __init__(self, input_dim):
+        super(CustomNeuralNetwork,self).__init__()
         self.fc1 = nn.Linear(input_dim, 128)
         self.fc2 = nn.Linear(128, 64)
         self.fc3 = nn.Linear(64, 32)
@@ -166,14 +216,15 @@ def CustomNeuralNetwork():
         y_pred = torch.sigmoid(self.fc4(x))
         return y_pred
 
-def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=16, k_folds=5, threshold=0.5):
+
+def train_and_eval(X_train, y_train, x_doc_clean, epochs=30, eta=0.001, batch_size=8, k_folds=5, threshold=0.5):
     print("Start training...")
     kf = KFold(n_splits=k_folds, shuffle=True,random_state=666)
     each_fold_acc = []
 
     for i, (train_index, val_index) in enumerate(kf.split(X_train)):
         mps_device = torch.device("mps")
-        print(f"===================== Fold {i} =====================")
+        print(f"===================== Fold {i+1} =====================")
 
         # get the real data from index
         X_train_fold, y_train_fold = X_train[train_index].to(torch.float32), y_train[train_index].to(torch.float32)
@@ -181,6 +232,8 @@ def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=16, k_fold
 
         # model init
         lg_model = LogisticRegressionModel(X_train_fold.shape[1]).to(mps_device).float()
+        # print model information
+        print(f"model info: {lg_model}")
         bce_loss = nn.BCELoss()
         optimizer = optim.Adam(lg_model.parameters(), lr=eta)
 
@@ -195,7 +248,7 @@ def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=16, k_fold
                 y_pred = lg_model(X_batch)
                 loss = bce_loss(y_pred, y_batch)
                 # current batch's loss
-                print(f"Batch {j//batch_size+1} - Loss: {loss.item():.5f}")
+                print(f"Fold: {i+1} Epoch:{epoch+1} Batch: {j//batch_size+1} - Loss: {loss.item():.5f}")
                 loss.backward()
                 optimizer.step()
 
@@ -205,15 +258,17 @@ def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=16, k_fold
             y_val_pred_raw = lg_model(X_val_fold.to(mps_device)).squeeze()
             y_val_pred = (y_val_pred_raw > threshold).float()
             accuracy = (y_val_pred.cpu() == y_val_fold).float().mean().item()
-            print(f"Fold {i} - Validation accuracy: {accuracy:.5f}")
+            print(f"Fold {i+1} - Validation accuracy: {accuracy:.5f}")
             each_fold_acc.append(accuracy)
+
 
     # avg accuracy of 5 folds
     avg_acc_5_fold = np.mean(each_fold_acc)
     print(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}")
     with open("base_line_acc.txt", "a") as f:
         # Append function parameters to the accuracy file
-        f.write(f"epoch: {epochs}, eta: {eta}, batch_size: {batch_size}, k_folds: {k_folds}, threshold: {threshold}\n")
+        isCustom = True
+        f.write(f"epoch: {epochs}, eta: {eta}, batch_size: {batch_size}, k_folds: {k_folds}, threshold: {threshold}, Custom: {isCustom}\n")
         f.write(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}\n")
     return each_fold_acc
 
@@ -223,7 +278,7 @@ if __name__ == '__main__':
     x_test_path = "../test_data/x_test.csv"
 
     transform_glove_to_dictionary()
-    X_train, y_train = SentimentDataSet(x_train_path, y_train_path, x_test_path, transform=transform).load_train_csv()
+    X_train, y_train, x_doc_clean = SentimentDataSet(x_train_path, y_train_path, x_test_path, transform=transform).load_train_csv()
     X_train = X_train.to(torch.float32)
     y_train = y_train.to(torch.float32)
-    fold5_acc = train_and_eval(X_train, y_train)
+    fold5_acc = train_and_eval(X_train, y_train, x_doc_clean)

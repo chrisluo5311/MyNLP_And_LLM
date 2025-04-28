@@ -8,3 +8,5 @@
 #/NLP/hw2/glove.6B.50d.txt.zip
 #/NLP/hw2/glove.6B.50d.txt
 /.gitattributes
+
+/NLP/hw1/__pycache__

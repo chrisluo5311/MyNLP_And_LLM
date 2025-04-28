@@ -6,3 +6,9 @@ epoch: 30, eta: 0.001, batch_size: 64, k_folds: 5, threshold: 0.5
 Average accuracy of 5 folds: 0.72958
 epoch: 30, eta: 0.001, batch_size: 16, k_folds: 5, threshold: 0.5
 Average accuracy of 5 folds: 0.75208
+epoch: 30, eta: 0.001, batch_size: 8, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75750
+epoch: 30, eta: 0.001, batch_size: 8, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75667
+epoch: 30, eta: 0.001, batch_size: 8, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77583
