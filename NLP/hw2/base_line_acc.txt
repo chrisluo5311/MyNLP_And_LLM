@@ -1,0 +1,8 @@
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5
+Average accuracy of 5 folds: 0.74833
+epoch: 60, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5
+Average accuracy of 5 folds: 0.74833
+epoch: 30, eta: 0.001, batch_size: 64, k_folds: 5, threshold: 0.5
+Average accuracy of 5 folds: 0.72958
+epoch: 30, eta: 0.001, batch_size: 16, k_folds: 5, threshold: 0.5
+Average accuracy of 5 folds: 0.75208

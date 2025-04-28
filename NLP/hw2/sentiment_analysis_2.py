@@ -152,7 +152,21 @@ class LogisticRegressionModel(nn.Module):
         y_pred = torch.sigmoid(self.linear(x))
         return y_pred
 
-def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=32, k_folds=5, threshold=0.5):
+def CustomNeuralNetwork():
+    def __init__(self, input_dim):
+        self.fc1 = nn.Linear(input_dim, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, 1)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = torch.relu(self.fc3(x))
+        y_pred = torch.sigmoid(self.fc4(x))
+        return y_pred
+
+def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=16, k_folds=5, threshold=0.5):
     print("Start training...")
     kf = KFold(n_splits=k_folds, shuffle=True,random_state=666)
     each_fold_acc = []
@@ -196,9 +210,12 @@ def train_and_eval(X_train, y_train, epochs=30, eta=0.001, batch_size=32, k_fold
 
     # avg accuracy of 5 folds
     avg_acc_5_fold = np.mean(each_fold_acc)
-    print(f"Average accuracy of 5 folds: {avg_acc_5_fold}:.5f")
+    print(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}")
+    with open("base_line_acc.txt", "a") as f:
+        # Append function parameters to the accuracy file
+        f.write(f"epoch: {epochs}, eta: {eta}, batch_size: {batch_size}, k_folds: {k_folds}, threshold: {threshold}\n")
+        f.write(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}\n")
     return each_fold_acc
-
 
 if __name__ == '__main__':
     x_train_path = "../train_data/x_train.csv"
