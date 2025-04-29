@@ -5,7 +5,9 @@ import spacy
 from spacy.matcher import PhraseMatcher
 
 text_list = ["THAT one didn't work either", "I'm very disappointed with my decision", "Absolutel junk",
-            "It dit not work most of the time with my Nokia 5320.", "down the drain", "out of hand",]
+            "It dit not work most of the time with my Nokia 5320.", "down the drain", "out of hand",
+            "In short - this was a monumental waste of time and energy and I would not recommend anyone to EVER see this film.",
+            "My sashimi was poor quality being soggy and tasteless."]
 
 symSpell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
 symSpell.load_dictionary("./glove_symspell_dictionary.txt", term_index=0, count_index=1)
@@ -36,7 +38,65 @@ def contraction_filter(tokens):
 
 nlp = spacy.load("en_core_web_sm")
 matcher = PhraseMatcher(nlp.vocab)
-phrases = ["down the drain", "out of hand", "under the weather", "out of order"]
+
+phrases = [
+    # Negation
+    "not bad",
+    "not good",
+    "not impressed",
+    "not recommend",
+    "no problem",
+    "no issues",
+    "never again",
+    "never disappointed",
+    "no complaints",
+    "not worth",
+    "not happy",
+    "not satisfied",
+    "no doubt",
+
+    # Positive
+    "top notch",
+    "well done",
+    "highly recommend",
+    "five stars",
+    "exceeded expectations",
+    "good value",
+    "user friendly",
+    "easy to use",
+    "works perfectly",
+    "worth every penny",
+    "value for money",
+    "love it",
+
+    # Negative
+    "down the drain",
+    "waste of money",
+    "fell apart",
+    "poor quality",
+    "poor product",
+    "bad quality",
+    "stopped working",
+    "bad experience",
+    "customer service",
+    "never buy",
+    "never work",
+    "not worth it",
+    "not enough",
+    "cheaply made",
+    "broke after",
+    "returned it",
+    "would not recommend",
+    "does not work",
+    "out of stock",
+
+    # Neutral
+    "fast shipping",
+    "as described",
+    "packaging was good",
+    "looks good",
+    "arrived quickly",
+]
 patterns = [nlp.make_doc(phrase) for phrase in phrases]
 matcher.add("IMPORTANT_PHRASES", patterns)
 def preserve_phrases(text):
