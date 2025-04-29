@@ -14,6 +14,7 @@ from symspellpy import SymSpell, Verbosity
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import  KFold
+from sklearn.model_selection import  StratifiedKFold
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import spacy
@@ -75,13 +76,15 @@ def transform(sentence, word2vec, word2tfidf, dim=50):
                     each_word_embedded_vector.append(avg_vec* weight)
                     each_word_weight.append(weight)
                 else:
-                    # not in the word2vec => use random
-                    each_word_embedded_vector.append(np.zeros(dim))
+                    # not in the word2vec => set seed and use random
+                    np.random.seed(321)
+                    each_word_embedded_vector.append(np.random.rand(dim) * weight)
                     each_word_weight.append(weight)
             else:
                 # use a random vector for an unknown word
                 weight = word2tfidf.get(word, 1.0)
-                each_word_embedded_vector.append(np.zeros(dim))
+                np.random.seed(123)
+                each_word_embedded_vector.append(np.random.rand(dim) * weight)
                 each_word_weight.append(weight)
 
         # print("Each word's embedded vector = ", each_word_embedded_vector)
@@ -382,10 +385,13 @@ class CustomCNN(nn.Module):
 
 def train_and_eval(X_train, y_train, x_doc_clean, epochs=30, eta=0.001, batch_size=128, k_folds=5, threshold=0.5):
     print("Start training...")
-    kf = KFold(n_splits=k_folds, shuffle=True,random_state=666)
+    # kf = KFold(n_splits=k_folds, shuffle=True,random_state=666)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
     each_fold_acc = []
 
-    for i, (train_index, val_index) in enumerate(kf.split(X_train)):
+    # use skf to split the data
+    for i, (train_index, val_index) in enumerate(skf.split(X_train, y_train)):
         mps_device = torch.device("mps")
         print(f"===================== Fold {i+1} =====================")
 
@@ -419,17 +425,14 @@ def train_and_eval(X_train, y_train, x_doc_clean, epochs=30, eta=0.001, batch_si
                 print(f"Fold: {i+1} Epoch:{epoch+1} Batch: {j//batch_size+1} - Loss: {loss.item():.5f}")
                 torch.nn.utils.clip_grad_norm_(lg_model.parameters(), 1.0)
                 optimizer.step()
-                # if warmup_scheduler.dampen():
-                #     pass
-                # else:
-                #     scheduler_cosine.step()
+                # warmup_scheduler.dampen()
 
         # validation
         lg_model.eval()
         with torch.no_grad():
             y_val_pred_raw = lg_model(X_val_fold.to(mps_device)).squeeze()
             y_val_pred = (y_val_pred_raw > threshold).float()
-            accuracy = (y_val_pred.cpu() == y_val_fold).float().mean().item()
+            accuracy = (y_val_pred.cpu() == y_val_fold).to(torch.float32).mean().item()
             print(f"Fold {i+1} - Validation accuracy: {accuracy:.5f}")
             each_fold_acc.append(accuracy)
 
