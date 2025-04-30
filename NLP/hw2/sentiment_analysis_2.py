@@ -69,36 +69,41 @@ def transform(sentence, word2vec, word2tfidf, dim=50):
         each_word_weight = []
         for word in each_line_words:
             if word in word2vec:
-                weight = word2tfidf.get(word, 5)*10
-                each_word_embedded_vector.append(word2vec[word] * weight)
-                each_word_weight.append(weight)
+                # weight = word2tfidf.get(word, 5)*10
+                # each_word_embedded_vector.append(word2vec[word] * weight)
+                each_word_embedded_vector.append(word2vec[word])
+                # each_word_weight.append(weight)
             elif "_" in word or "-" in word:
                 parts = word.split("_") if "_" in word else word.split("-")
-                part_vec = [word2vec[p] for p in parts if p in word2vec]
-                biweight = np.mean([word2tfidf.get(p, 5)*10 for p in parts])
+                part_vec = [word2vec[p] if p in word2vec else default for p in parts]
+                # biweight = np.mean([word2tfidf.get(p, 5)*10 for p in parts])
                 if part_vec:
                     avg_vec = np.mean(part_vec, axis=0)
-                    each_word_embedded_vector.append(avg_vec* biweight)
-                    each_word_weight.append(biweight)
+                    # each_word_embedded_vector.append(avg_vec* biweight)
+                    each_word_embedded_vector.append(avg_vec)
+                    # each_word_weight.append(biweight)
                 else:
                     # not in the word2vec => set seed and use random
                     # np.random.seed(321)
-                    each_word_embedded_vector.append(default * biweight)
-                    each_word_weight.append(biweight)
+                    # each_word_embedded_vector.append(default * biweight)
+                    each_word_embedded_vector.append(default)
+                    # each_word_weight.append(biweight)
             else:
                 # use a random vector for an unknown word
-                weight = word2tfidf.get(word, 0.5)
+                # weight = word2tfidf.get(word, 0.5)
                 # np.random.seed(123)
-                each_word_embedded_vector.append(default * weight)
-                each_word_weight.append(weight)
+                # each_word_embedded_vector.append(default * weight)
+                each_word_embedded_vector.append(default)
+                # each_word_weight.append(weight)
 
         # print("Each word's embedded vector = ", each_word_embedded_vector)
         if len(each_word_embedded_vector) == 0:
-            each_sentence_tensor = torch.zeros(dim)
+            # each_sentence_tensor = torch.zeros(dim)
+            each_sentence_tensor = torch.tensor(default)
         else:
             tmp_word_arr = np.array(each_word_embedded_vector)
-            # each_sentence_tensor = torch.tensor(tmp_word_arr).mean(dim=0)
-            each_sentence_tensor = torch.tensor(tmp_word_arr).sum(dim=0)/sum(each_word_weight) # this is the semantic meaning of a sentence
+            each_sentence_tensor = torch.tensor(tmp_word_arr).mean(dim=0)
+            # each_sentence_tensor = torch.tensor(tmp_word_arr).sum(dim=0)/sum(each_word_weight) # this is the semantic meaning of a sentence
             # each_sentence_tensor = torch.tensor(tmp_word_arr).max(dim=0).values
 
         # print("Each sentence tensor = ", each_sentence_tensor)
@@ -579,7 +584,7 @@ if __name__ == '__main__':
     X_test  = dataset.transform(x_test_doc_clean, dataset.load_glove_as_dict(), dataset.word2tfidf).to(torch.float32)
 
     # 5-fold cross-validation on X_train
-    fold5_acc = train_and_eval(X_train, y_train, x_doc_clean)
+    # fold5_acc = train_and_eval(X_train, y_train, x_doc_clean)
 
     # Final prediction on x_test
-    # train_full_and_predict(X_train, y_train, X_test)
+    train_full_and_predict(X_train, y_train, X_test)

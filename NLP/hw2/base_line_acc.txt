@@ -552,3 +552,13 @@ epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.77167
 epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.77552
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.78177
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77969
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.78698
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.74479
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.78594
