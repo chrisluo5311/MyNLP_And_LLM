@@ -446,3 +446,17 @@ epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.76719
 epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.77552
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77031
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77448
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77187
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77448
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76979
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77865
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77552
