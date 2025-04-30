@@ -226,3 +226,223 @@ epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.49250
 epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
 Average accuracy of 5 folds: 0.77667
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.49583 => wrong loss function (CrossEntropyLoss)
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77125
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76792
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76583
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76708
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76833
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77042
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76042
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.61875
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76542
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76292
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76958
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76208
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.65500
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77125
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.73833
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77417
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77042
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77042
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77292
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.56708
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76708
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76750
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76708
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77375
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.70750
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75208
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76750
+epoch: 30, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76958
+epoch: 35, eta: 0.001, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76708
+epoch: 35, eta: 0.0001, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.72250
+epoch: 35, eta: 0.005, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76500
+epoch: 35, eta: 0.003, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76667
+epoch: 35, eta: 0.001, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76042
+epoch: 35, eta: 0.003, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77250
+epoch: 60, eta: 0.003, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76292
+epoch: 27, eta: 0.003, batch_size: 256, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77125
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77167
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.74333
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75625
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75500
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76833
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77083
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.74708
+epoch: 30, eta: 0.003, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76292
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76208
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76083
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76542
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75792
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76500
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76500
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76667
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76750
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.71667
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75333
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76667
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75833
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.73625
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76792
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77292
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75917
+epoch: 27, eta: 0.003, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76958
+epoch: 30, eta: 0.003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77792
+epoch: 40, eta: 0.003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76750
+epoch: 30, eta: 0.003, batch_size: 16, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76583
+epoch: 30, eta: 0.003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76667
+epoch: 23, eta: 0.003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76875
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77542
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77917
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76875
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76875
+epoch: 50, eta: 0.0005, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77292
+epoch: 50, eta: 0.0005, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.51375
+epoch: 50, eta: 0.0005, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.50333
+epoch: 30, eta: 0.01, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.50167
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.49083
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.50250
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.72500
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.51083
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77000
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76417
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76750
+epoch: 50, eta: 0.001, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77417
+epoch: 50, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77417
+epoch: 50, eta: 0.001, batch_size: 128, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77250
+epoch: 50, eta: 0.001, batch_size: 64, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77208
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77542
+epoch: 30, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76625
+epoch: 70, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77042
+epoch: 20, eta: 0.0003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75792
+epoch: 50, eta: 0.0003, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75250
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.74375
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.74375
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75781
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.57188
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76198
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75365
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.75875
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77031
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76979
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76615
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77083
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77125
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.4, Custom: True
+Average accuracy of 5 folds: 0.76302
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.3, Custom: True
+Average accuracy of 5 folds: 0.73958
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.6, Custom: True
+Average accuracy of 5 folds: 0.75417
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.7, Custom: True
+Average accuracy of 5 folds: 0.74375
+epoch: 50, eta: 0.001, batch_size: 16, k_folds: 5, threshold: 0.6, Custom: True
+Average accuracy of 5 folds: 0.76167
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.76719
+epoch: 50, eta: 0.001, batch_size: 32, k_folds: 5, threshold: 0.5, Custom: True
+Average accuracy of 5 folds: 0.77552
