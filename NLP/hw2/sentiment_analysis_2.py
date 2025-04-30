@@ -410,13 +410,13 @@ class CustomNeuralNetwork(nn.Module):
     #             if m.bias is not None:
     #                 nn.init.constant_(m.bias, 0)
     def forward(self, x):
-        x = self.gelu(self.fc1(x))
+        x = self.gelu(self.bn1(self.fc1(x)))
         x = self.dropout1(x)
-        x = self.gelu(self.fc2(x))
+        x = self.gelu(self.bn2(self.fc2(x)))
         x = self.dropout1(x)
-        x = self.gelu(self.fc3(x))
+        x = self.gelu(self.bn3(self.fc3(x)))
         x = self.dropout1(x)
-        x = self.gelu(self.fc4(x))
+        x = self.gelu(self.bn4(self.fc4(x)))
         # x = self.dropout1(x)
         # x = self.gelu(self.bn5(self.fc5(x)))
         # x = self.dropout1(x)
