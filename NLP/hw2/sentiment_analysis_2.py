@@ -152,7 +152,9 @@ def max_mean_transform(sentences, word2vec, word2tfidf, dim=50):
 class SentimentDataSet:
     def __init__(self, x_train_file_path, y_train_file_path,x_test_file_path,
                 text_column='text', label_column='is_positive_sentiment', transform=None):
+        self.is_test = False
         self.word_doc_freq = None
+        self.x_test_word_doc_freq = None
         self.x_train_file_path = x_train_file_path
         self.y_train_file_path = y_train_file_path
         self.x_test_file_path = x_test_file_path
@@ -245,8 +247,8 @@ class SentimentDataSet:
         # Build a dict that will map from string word to 50-dim vector
         word_list = word_embeddings.index.values.tolist()
         word2vec = OrderedDict(zip(word_list, word_embeddings.values))
-        print("Type of word2vec = ", type(word2vec))
-        print("len(word2vec) = ", len(word2vec))
+        # print("Type of word2vec = ", type(word2vec))
+        # print("len(word2vec) = ", len(word2vec))
         return word2vec
 
     def build_document_frequency(self, sentences):
@@ -275,7 +277,6 @@ class SentimentDataSet:
         self.tfidf_vectorizer.fit(x_doc_clean.tolist())
         idf_values = dict(zip(self.tfidf_vectorizer.get_feature_names_out(), self.tfidf_vectorizer.idf_))
         self.word2tfidf = idf_values
-
         X_train = self.transform(x_doc_clean, self.load_glove_as_dict(), self.word2tfidf)
         # X_train = self.max_mean_transform(x_doc_clean, self.load_glove_as_dict(), self.word2tfidf)
         y_train = torch.tensor(y_label.values, dtype=torch.int64)
@@ -354,9 +355,14 @@ class SentimentDataSet:
     def clean_text_with_word_doc_freq(self, corrected_tokens):
         # print(f"Corrected tokens: {corrected_tokens}")
         # remove stop words
-        no_stop_words_tokens = [token for token in corrected_tokens
+        if not self.is_test:
+            no_stop_words_tokens = [token for token in corrected_tokens
                                 if token not in self.stop_words or token in self.negation_words
                                 and (self.word_doc_freq.get(token,0) >= 10)]
+        else:
+            no_stop_words_tokens = [token for token in corrected_tokens
+                                    if token not in self.stop_words or token in self.negation_words
+                                    and (self.x_test_word_doc_freq.get(token,0) >= 10)]
         # print(f"No stop words tokens: {no_stop_words_tokens}")
         # POS tagging
         # tagged_tokens = pos_tag(corrected_tokens)
@@ -522,13 +528,58 @@ def train_and_eval(X_train, y_train, x_doc_clean, epochs=50, eta=0.001, batch_si
         f.write(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}\n")
     return each_fold_acc
 
+def train_full_and_predict(X_train, y_train, X_test, epochs=50, eta=0.001, batch_size=32,
+                        file_path="./pred_test_output/yprob_test.txt"):
+    mps_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nn_model = CustomNeuralNetwork(X_train.shape[1]).to(mps_device).float()
+    bce_loss = nn.BCELoss()
+    optimizer = optim.AdamW(nn_model.parameters(), lr=eta)
+    scheduler_cosine = CosineAnnealingWarmRestarts(optimizer, T_0=10, T_mult=2)
+    for epoch in range(epochs):
+        print(f"################## Epoch: {epoch+1} ##################")
+        nn_model.train()
+        train_dataset = TensorDataset(X_train, y_train.unsqueeze(1))
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        for batch_idx, (X_batch, y_batch) in enumerate(train_loader):
+            X_batch, y_batch = X_batch.to(mps_device), y_batch.to(mps_device)
+            optimizer.zero_grad()
+            y_pred = nn_model(X_batch)
+            loss = bce_loss(y_pred, y_batch)
+            loss.backward()
+            print(f"Epoch:{epoch+1} Batch: {batch_idx+1} - Loss: {loss.item():.5f}")
+            torch.nn.utils.clip_grad_norm_(nn_model.parameters(), 0.8)
+            optimizer.step()
+            scheduler_cosine.step(epoch + batch_idx / len(train_loader))
+    nn_model.eval()
+    with torch.no_grad():
+        y_prob_raw = nn_model(X_test).squeeze().cpu().numpy()
+    with open(file_path, "w") as f:
+        for p in y_prob_raw:
+            f.write(f"{p:.6f}\n")
+    print(f"✅  saved {len(y_prob_raw)} probabilities to '{file_path}'")
+
 if __name__ == '__main__':
     x_train_path = "../train_data/x_train.csv"
     y_train_path = "../train_data/y_train.csv"
     x_test_path = "../test_data/x_test.csv"
 
     transform_glove_to_dictionary()
-    X_train, y_train, x_doc_clean = SentimentDataSet(x_train_path, y_train_path, x_test_path, transform=transform).load_train_csv()
+    dataset = SentimentDataSet(x_train_path, y_train_path, x_test_path, transform=transform)
+    X_train, y_train, x_doc_clean = dataset.load_train_csv()
     X_train = X_train.to(torch.float32)
     y_train = y_train.to(torch.float32)
+
+    # X_test cleaning and transform
+    x_test_corrected_tokens = pd.read_csv(x_test_path)[dataset.x_col].apply(dataset.clean_text)
+    x_test_corrected_str = x_test_corrected_tokens.apply(lambda x: " ".join(x))
+
+    dataset.is_test = True
+    dataset.x_test_word_doc_freq = dataset.build_document_frequency(x_test_corrected_str)
+    x_test_doc_clean = x_test_corrected_tokens.apply(dataset.clean_text_with_word_doc_freq)
+    X_test  = dataset.transform(x_test_doc_clean, dataset.load_glove_as_dict(), dataset.word2tfidf).to(torch.float32)
+
+    # 5-fold cross-validation on X_train
     fold5_acc = train_and_eval(X_train, y_train, x_doc_clean)
+
+    # Final prediction on x_test
+    # train_full_and_predict(X_train, y_train, X_test)
