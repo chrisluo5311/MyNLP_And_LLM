@@ -10,3 +10,6 @@
 /.gitattributes
 
 /NLP/hw1/__pycache__
+/NLP/hw2/glove.6B.300d.txt
+/NLP/hw2/glove.6B.300d.txt.zip
+/NLP/hw2/glove_300d_symspell_dictionary.txt

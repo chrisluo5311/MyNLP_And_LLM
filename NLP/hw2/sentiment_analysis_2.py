@@ -5,6 +5,7 @@ import torch
 import re
 import os
 import pandas as pd
+import numpy
 from collections import OrderedDict
 from nltk import WordNetLemmatizer
 from nltk.stem import PorterStemmer
@@ -41,8 +42,10 @@ symSpell.load_dictionary("./glove_symspell_dictionary.txt", term_index=0, count_
 
 # glove path
 glove_file_path = "./glove.6B.50d.txt"
+glove_300d_file_path = "./glove.6B.300d.txt"
 # glove as dictionary path
 glove_symspell_file_path = "./glove_symspell_dictionary.txt"
+glove_300d_symspell_file_path = "./glove_300d_symspell_dictionary.txt"
 
 # transform glove to dictionary for misspelling correction
 def transform_glove_to_dictionary():
@@ -54,6 +57,16 @@ def transform_glove_to_dictionary():
         print("Successfully transformed glove to dictionary ✅")
     else:
         print("glove_symspell_file_path exists => skip")
+
+def transform_glove_300d_to_dictionary():
+    if not os.path.exists(glove_300d_file_path) or os.path.getsize(glove_300d_symspell_file_path) == 0:
+        with open(glove_300d_file_path, "r") as input_file, open(glove_300d_symspell_file_path, "w") as output_file:
+            for each_line in input_file:
+                first_word = each_line.split()[0]
+                output_file.write(f"{first_word} 1\n")
+        print("Successfully transformed glove to dictionary ✅")
+    else:
+        print(f"{glove_300d_symspell_file_path} exists => skip")
 
 # word embeddings dimension 50
 def transform(sentence, word2vec, word2tfidf, dim=50):
@@ -246,9 +259,8 @@ class SentimentDataSet:
         self.word2tfidf = None
 
     def load_glove_as_dict(self):
-        print("Loading glove as dictionary...")
-        word_embeddings = pd.read_csv('./glove.6B.50d.txt',
-                                        header=None, sep=' ', index_col=0, encoding='utf-8', quoting=3)
+        print(f"Loading {glove_300d_file_path} as dictionary...")
+        word_embeddings = pd.read_csv(glove_300d_file_path, header=None, sep=' ', index_col=0, encoding='utf-8', quoting=3)
         # Build a dict that will map from string word to 50-dim vector
         word_list = word_embeddings.index.values.tolist()
         word2vec = OrderedDict(zip(word_list, word_embeddings.values))
@@ -278,7 +290,7 @@ class SentimentDataSet:
         x_doc_clean = corrected_tokens.apply(self.clean_text_with_word_doc_freq) # Series, shape:(2400,)
         print("Finished cleaning text")
         # print(f"x_doc_clean type: {type(x_doc_clean)}, shape: {x_doc_clean.shape}")
-        self.tfidf_vectorizer = TfidfVectorizer()
+        self.tfidf_vectorizer = TfidfVectorizer(ngram_range=(1,2), sublinear_tf=True)
         self.tfidf_vectorizer.fit(x_doc_clean.tolist())
         idf_values = dict(zip(self.tfidf_vectorizer.get_feature_names_out(), self.tfidf_vectorizer.idf_))
         self.word2tfidf = idf_values
@@ -290,6 +302,25 @@ class SentimentDataSet:
         # print("y_train shape = ", y_train.shape)
         # print("y_train = ", y_train)
         return X_train, y_train, x_doc_clean
+
+    def load_tf_idf(self, ft_cnt):
+        print("Loading tf-idf...")
+        x_doc = pd.read_csv(self.x_train_file_path)
+        y_label = pd.read_csv(self.y_train_file_path)
+        x_doc = x_doc[self.x_col]
+        y_label = y_label[self.y_col]
+        y_train = torch.tensor(y_label.values, dtype=torch.int64)
+        print("Cleaning text...")
+        corrected_tokens = x_doc.apply(self.clean_text)
+        corrected_str = corrected_tokens.apply(lambda x: " ".join(x))
+        self.word_doc_freq = self.build_document_frequency(corrected_str)
+        x_doc_clean = corrected_tokens.apply(self.clean_text_with_word_doc_freq) # Series, shape:(2400,)
+        print("Finished cleaning text")
+        self.tfidf_vectorizer = TfidfVectorizer(max_features=ft_cnt, ngram_range=(1,2), sublinear_tf=True)
+        tfidf_matrix = self.tfidf_vectorizer.fit_transform(x_doc_clean.tolist())
+        # turn tfidf_matrix to tensor
+        tfidf_tensor = torch.tensor(tfidf_matrix.toarray(), dtype=torch.float32)
+        return tfidf_tensor, y_train, self.tfidf_vectorizer
 
     def correct_mispronounciation(self, word):
         possible_answer = symSpell.lookup(word, Verbosity.CLOSEST, max_edit_distance=2)
@@ -396,15 +427,15 @@ class CustomNeuralNetwork(nn.Module):
         self.dropout1 = nn.Dropout(0.5)
         self.dropout2 = nn.Dropout(0.35)
         self.gelu = nn.GELU()
-        self.fc1 = nn.Linear(input_dim, 256)
-        self.bn1 = nn.BatchNorm1d(256)
-        self.fc2 = nn.Linear(256, 64)
-        self.bn2 = nn.BatchNorm1d(64)
-        self.fc3 = nn.Linear(64, 32)
-        self.bn3 = nn.BatchNorm1d(32)
-        self.fc4 = nn.Linear(32, 24)
-        self.bn4 = nn.BatchNorm1d(24)
-        self.fc5 = nn.Linear(24, 1)
+        self.fc1 = nn.Linear(input_dim, 64)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.fc2 = nn.Linear(64, 16)
+        self.bn2 = nn.BatchNorm1d(16)
+        self.fc3 = nn.Linear(16, 8)
+        self.bn3 = nn.BatchNorm1d(8)
+        self.fc4 = nn.Linear(8, 4)
+        self.bn4 = nn.BatchNorm1d(4)
+        self.fc5 = nn.Linear(4, 1)
         # self.bn5 = nn.BatchNorm1d(16)
         # self.fc6 = nn.Linear(16, 1)
         # self._init_weights()
@@ -415,14 +446,18 @@ class CustomNeuralNetwork(nn.Module):
     #             if m.bias is not None:
     #                 nn.init.constant_(m.bias, 0)
     def forward(self, x):
+        # x = self.gelu(self.bn1(self.fc1(x)))
         x = self.gelu(self.fc1(x))
         x = self.dropout1(x)
+        # x = self.gelu(self.bn2(self.fc2(x)))
         x = self.gelu(self.fc2(x))
         x = self.dropout1(x)
+        # x = self.gelu(self.bn3(self.fc3(x)))
         x = self.gelu(self.fc3(x))
         x = self.dropout1(x)
+        # x = self.gelu(self.bn4(self.fc4(x)))
         x = self.gelu(self.fc4(x))
-        # x = self.dropout1(x)
+        x = self.dropout1(x)
         # x = self.gelu(self.bn5(self.fc5(x)))
         # x = self.dropout1(x)
         y_pred = torch.sigmoid(self.fc5(x))
@@ -455,14 +490,12 @@ class CustomCNN(nn.Module):
         y_pred = torch.sigmoid(self.fc(x))
         return y_pred
 
-def train_and_eval(X_train, y_train, x_doc_clean, epochs=50, eta=0.001, batch_size=32, k_folds=5, threshold=0.5):
+def train_and_eval(X_train, y_train, x_doc_clean, epochs=50, eta=0.001, batch_size=128, k_folds=5, threshold=0.5):
     print("Start training...")
     seed=666
     # kf = KFold(n_splits=k_folds, shuffle=True,random_state=seed)
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=seed)
-
     each_fold_acc = []
-
     # use skf to split the data
     best_acc = 0
     no_improve = 0
@@ -518,11 +551,9 @@ def train_and_eval(X_train, y_train, x_doc_clean, epochs=50, eta=0.001, batch_si
                 print(f"Best model saved for fold {i+1} with accuracy: {best_acc:.5f}")
             else:
                 no_improve += 1
-                if no_improve >= 3:
+                if no_improve >= 5:
                     print(f"No improvement for 5 epochs, early stopping for fold {i+1}")
                     break
-
-
     # avg accuracy of 5 folds
     avg_acc_5_fold = np.mean(each_fold_acc)
     print(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}")
@@ -533,8 +564,8 @@ def train_and_eval(X_train, y_train, x_doc_clean, epochs=50, eta=0.001, batch_si
         f.write(f"Average accuracy of 5 folds: {avg_acc_5_fold:.5f}\n")
     return each_fold_acc
 
-def train_full_and_predict(X_train, y_train, X_test, epochs=50, eta=0.001, batch_size=32,
-                        file_path="./pred_test_output/yprob_test.txt"):
+def train_full_and_predict(X_train, y_train, X_test, epochs=500, eta=0.001, batch_size=128,
+                        file_path="./pred_test_output/yprob_test_new.txt"):
     mps_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     nn_model = CustomNeuralNetwork(X_train.shape[1]).to(mps_device).float()
     bce_loss = nn.BCELoss()
@@ -568,22 +599,32 @@ if __name__ == '__main__':
     y_train_path = "../train_data/y_train.csv"
     x_test_path = "../test_data/x_test.csv"
 
-    transform_glove_to_dictionary()
+    # transform_glove_to_dictionary()
+    transform_glove_300d_to_dictionary()
     dataset = SentimentDataSet(x_train_path, y_train_path, x_test_path, transform=transform)
+    # X_train and y_train are tensor
     X_train, y_train, x_doc_clean = dataset.load_train_csv()
+    ft_cnt = None
+    # X_train, y_train, tfidf_vectorizer = dataset.load_tf_idf(ft_cnt)
+
+    # Question 1️⃣
+    # tf-idf with logistic regression and 5-fold cross-validation
+    # fold5_acc = train_and_eval(X_train, y_train, None)
+
+    # 2️⃣ & 3️⃣
     X_train = X_train.to(torch.float32)
     y_train = y_train.to(torch.float32)
 
     # X_test cleaning and transform
     x_test_corrected_tokens = pd.read_csv(x_test_path)[dataset.x_col].apply(dataset.clean_text)
     x_test_corrected_str = x_test_corrected_tokens.apply(lambda x: " ".join(x))
-
     dataset.is_test = True
     dataset.x_test_word_doc_freq = dataset.build_document_frequency(x_test_corrected_str)
     x_test_doc_clean = x_test_corrected_tokens.apply(dataset.clean_text_with_word_doc_freq)
-    X_test  = dataset.transform(x_test_doc_clean, dataset.load_glove_as_dict(), dataset.word2tfidf).to(torch.float32)
+    X_test = dataset.transform(x_test_doc_clean, dataset.load_glove_as_dict(), dataset.word2tfidf).to(torch.float32)
+    # X_test_tfidf_tensor = torch.tensor(tfidf_matrix.toarray(), dtype=torch.float32)
 
-    # 5-fold cross-validation on X_train
+    # word-embeddings with 5-fold cross-validation on X_train
     # fold5_acc = train_and_eval(X_train, y_train, x_doc_clean)
 
     # Final prediction on x_test
