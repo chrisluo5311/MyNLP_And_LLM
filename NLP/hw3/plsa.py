@@ -4,6 +4,7 @@ from collections import Counter
 from tqdm import tqdm
 import nltk
 from nltk.corpus import stopwords
+import os
 
 
 # nltk.download('stopwords')
@@ -88,6 +89,12 @@ class Corpus(object):
 
         self.term_doc_matrix[i][j] is the count of term j in document i
         """
+        matrix_file = "term_doc_matrix.npy"
+        if os.path.exists(matrix_file) and os.path.getsize(matrix_file) > 0:
+            self.term_doc_matrix = np.load(matrix_file)
+            print("Loaded term doc matrix from file.")
+            print("Term doc matrix shape:", self.term_doc_matrix.shape)
+            return
 
         rows = []
         for doc in self.documents:
@@ -98,7 +105,8 @@ class Corpus(object):
             rows.append(row)
         
         self.term_doc_matrix = np.array(rows)
-        print("Term doc matrix:", self.term_doc_matrix)
+        np.save(matrix_file, self.term_doc_matrix)
+        print("Term doc matrix:", self.term_doc_matrix) # 1000x9863
         print("Term doc matrix shape:", self.term_doc_matrix.shape)
 
     def initialize_randomly(self, number_of_topics):
@@ -116,12 +124,12 @@ class Corpus(object):
         # self.topic_word_prob = None  # P(w | z)
         # self.topic_prob = None  # P(z | d, w)
 
-        self.topic_word_prob = np.random.rand(number_of_topics, self.vocabulary_size)
+        self.topic_word_prob = np.random.rand(number_of_topics, self.vocabulary_size) # P(w|z) shape: 8x9863
         self.topic_word_prob = normalize(self.topic_word_prob)
         print("self.topic_word_prob:", self.topic_word_prob)
         print("shape:", self.topic_word_prob.shape)
         
-        self.document_topic_prob = np.random.rand(self.number_of_documents, number_of_topics)
+        self.document_topic_prob = np.random.rand(self.number_of_documents, number_of_topics) # P(z|d) shape: 1000x8
         self.document_topic_prob = normalize(self.document_topic_prob)
         print("self.document_topic_pro:", self.document_topic_prob)
         print("shape:", self.document_topic_prob.shape)
@@ -156,8 +164,13 @@ class Corpus(object):
 
         for word_idx in tqdm(range(self.vocabulary_size)):
             for document_idx in range(self.number_of_documents):
+                # 1000x8 * 8x9863 => [1,8] * [8x1] => [8,]
                 prob = self.document_topic_prob[document_idx, :] * self.topic_word_prob[:, word_idx]
-                prob = prob / prob.sum()
+                sum_prob = prob.sum()
+                if sum_prob == 0:
+                    prob = np.ones_like(prob) / len(prob)
+                else:
+                    prob = prob / sum_prob
                 self.topic_prob[document_idx, :, word_idx] = prob
 
     def maximization_step(self, number_of_topics):
@@ -168,21 +181,23 @@ class Corpus(object):
         
         # update P(w | z). T, self.topic_word_prob
 
-        # multiply term doc matrix  * topic prob (topic prob is what you calculated in E step). then you normalize over topics and words respectively.
+        # multiply term doc matrix(1000x9863) * topic prob (topic prob is what you calculated in E step). then you normalize over topics and words respectively.
         # when you use einsum, remember you are just updating the topic word prob and document topic prob. they should have the same dimensions as before
 
+        w_z_prob = np.einsum('dw,dzw->zw', self.term_doc_matrix, self.topic_prob) # 1000x9863, 1000x8x9863 => 8x9863
+        z_prob = np.einsum('dw,dzw->z', self.term_doc_matrix, self.topic_prob) # 1000x9863, 1000x8x9863 => 8,
+        #z_prob = np.where(z_prob == 0, 1e-12, z_prob) # avoid division by zero
+        self.topic_word_prob = w_z_prob/z_prob[:, np.newaxis] # 8x9863 / 8 => 8x9863
 
         # update P(z | d). D, self.document_topic_prob
 
         # number of times we expect to see a word in document d assigned to topic_idx j
         # n_dj = 1
-        
-        # Please complete this function.
 
-        #############################
-        # your code here            #
-        #############################
-
+        z_d_prob = np.einsum('dw,dzw->dz', self.term_doc_matrix, self.topic_prob) # 1000x9863, 1000x8x9863 => 1000,8
+        d_prob = self.term_doc_matrix.sum(axis=1, keepdims=True) # 1000x9863 => [1000,1]
+        #d_prob = np.where(d_prob == 0, 1e-12, d_prob)
+        self.document_topic_prob = z_d_prob/d_prob # 1000x8 / 1000 => 1000x8
 
 
     def calculate_likelihood(self):
@@ -192,12 +207,14 @@ class Corpus(object):
         Append the calculated log-likelihood to self.likelihoods
 
         """
-        log_prob = np.log(np.matmul(self.document_topic_prob, self.topic_word_prob))
+        dot = np.matmul(self.document_topic_prob, self.topic_word_prob)
+        dot = np.where(dot == 0, 1e-12, dot) # avoid division by zero
+        log_prob = np.log(dot)
         temp = log_prob * self.term_doc_matrix
-        sum = np.sum(temp)
-        print("newly calculated likelihood:", sum)
-        self.likelihoods.append(sum)
-        return sum
+        total_likelihood = np.sum(temp)
+        print("newly calculated likelihood:", total_likelihood)
+        self.likelihoods.append(total_likelihood)
+        return total_likelihood
 
     def plsa(self, number_of_topics, max_iter, epsilon):
 
@@ -211,15 +228,20 @@ class Corpus(object):
         
         # Create the counter arrays.
         
-        # P(z | d, w)
-        self.topic_prob = np.zeros([self.number_of_documents, number_of_topics, self.vocabulary_size], dtype=np.float)
+        # P(z | d, w) => 在文件 d 中某個位置觀察到字詞 w 時，該位置所屬的主題為 z 的後驗機率
+        # 1000x8x9863
+        self.topic_prob = np.zeros([self.number_of_documents, number_of_topics, self.vocabulary_size], dtype=float)
 
         # P(z | d) P(w | z)
         self.initialize(number_of_topics, random=True)
 
         # Run the EM algorithm
         current_likelihood = 0.0
-        
+
+        log_file_path = "likelihood_log.log"
+        with open(log_file_path, 'w') as log_file:
+            log_file.write("Iteration\tLikelihood\n")
+
         for iteration in tqdm(range(max_iter)):
             print("Iteration #" + str(iteration + 1) + "...")
             self.expectation_step()
@@ -228,6 +250,9 @@ class Corpus(object):
             previous_likelihood = current_likelihood
             current_likelihood = self.calculate_likelihood()
             current_likelihood = self.likelihoods[-1]
+
+            with open(log_file_path, "a") as f:
+                f.write(f"{iteration + 1}\t{current_likelihood}\n")
 
             for i in range(number_of_topics):
                 print("Top 10 words in topic {}: {}".format(i+1, [self.vocabulary[x] for x in np.argsort(-self.topic_word_prob[i,:])[:10]]))
