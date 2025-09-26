@@ -1,0 +1,31 @@
+Sampled Topics - Top Words Report
+==================================================
+
+Topic 8:
+image                0.012395
+method               0.009497
+based                0.009178
+data                 0.008984
+images               0.007850
+approach             0.007370
+using                0.006178
+model                0.006079
+algorithm            0.005924
+results              0.005495
+
+--------------------------------------------------
+
+Topic 4:
+information          0.011100
+web                  0.010508
+based                0.009974
+search               0.009686
+query                0.008002
+paper                0.007857
+documents            0.007067
+user                 0.006835
+approach             0.006669
+knowledge            0.005844
+
+--------------------------------------------------
+

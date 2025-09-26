@@ -5,6 +5,7 @@ from tqdm import tqdm
 import nltk
 from nltk.corpus import stopwords
 import os
+import random
 
 
 # nltk.download('stopwords')
@@ -277,16 +278,38 @@ def main():
     # Define the topics numbers
     number_of_topics = 8
     # Define the iteration number
-    max_iterations = 500
+    max_iterations = 375
     # Define the convergence condition
     epsilon = 1
     corpus.plsa(number_of_topics, max_iterations, epsilon)
+    return corpus
 
+def print_top_words_from_sampled_topics(corpus, number_of_samples=2, top_k=10, output_file="sampled_topics.txt"):
+    random.seed(666)
+    print("\nSampling and printing top words for topics...\n")
+    sampled_topic_indices = random.sample(range(corpus.topic_word_prob.shape[0]), number_of_samples)
+
+    with open(output_file, "w") as f:
+        f.write("Sampled Topics - Top Words Report\n")
+        f.write("=" * 50 + "\n\n")
+
+        for topic_idx in sampled_topic_indices:
+            top_indices = np.argsort(-corpus.topic_word_prob[topic_idx])[:top_k]
+            top_words = [corpus.vocabulary[i] for i in top_indices]
+            top_probs = corpus.topic_word_prob[topic_idx][top_indices]
+
+            f.write(f"Topic {topic_idx + 1}:\n")
+            for word, prob in zip(top_words, top_probs):
+                f.write(f"{word:20s} {prob:.6f}\n")
+            f.write("\n" + "-" * 50 + "\n\n")
+
+    print(f"\nTop words for {number_of_samples} sampled topics saved to '{output_file}'\n")
 
 
 # print each likelihood function each iteration
 if __name__ == '__main__':
-    main()
+    corpus = main()
+    print_top_words_from_sampled_topics(corpus)
 
 
 # [self.vocabulary[x] for x in np.argsort(-self.topic_word_prob[0,:])[:10]]
